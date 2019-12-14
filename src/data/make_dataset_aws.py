@@ -5,7 +5,7 @@ import boto3
 import fire
 from tqdm import tqdm, trange
 
-from helper import DATALAKE_NAME, PROFILEIMG_FOLDER, S3Helper, logger
+from src.modules.aws_helper import DATALAKE_NAME, PROFILEIMG_FOLDER, S3Helper, logger
 
 
 """
@@ -16,6 +16,9 @@ or (thumb_check_in or out_photo.jpg
 For now, we can ignore the thumbnails as we want to have higher resolution pictures. 
 """
 
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+## AWS Download
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
 def migrate_pictures():
     """
     This function is the main function to migrate all buckets has check in and check out photos to a centralized location denoted 
@@ -75,9 +78,12 @@ def download_images():
     """
     Simply a wrapper function to call what is already defined.
     """
-    local_folderpath = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_picinpic/dataset/unsorted'
+    local_folderpath = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/data/external/attendance_photos'
     logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=100, limit=500))
 
+## ------------------------------------------------------------------------------------------------------------------------------------------------------
+## Sub Functions
+## ------------------------------------------------------------------------------------------------------------------------------------------------------
 def __list_buckets(paths):
     """
     This function is to check every bucket if there is check_in / check_out folder present for us to consider
@@ -138,8 +144,6 @@ def __download_images(bucketname, folderpath, location, start_index = 0, limit=1
     statement = "There are %s images in %s" % (len(files), location)
 
     return statement
-
-
 
 
 

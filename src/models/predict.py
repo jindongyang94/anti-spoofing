@@ -1,14 +1,16 @@
 """
 USAGE
 python test.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
-python test.py classify_images --location=/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/dataset/unsorted \
+python test.py classify_images --location=/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/data/external \
 	--model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
 """
 
 import os
 import pickle
+import shutil
 import time
 from glob import glob
+from os.path import abspath, dirname, join
 
 import cv2
 import fire
@@ -19,7 +21,9 @@ from keras.models import load_model
 from keras.preprocessing.image import img_to_array
 from tqdm import tqdm
 
-from modules.helper import logger
+from src.modules.config import (external_data_location, models_location,
+                                working_directory)
+from src.modules.nn_helper import logger
 
 
 def video_demo(model, le, detector, confidence=0.5):
@@ -68,7 +72,7 @@ def video_demo(model, le, detector, confidence=0.5):
 	cv2.destroyAllWindows()
 	vs.stop()
 
-def classify_images(location, detector, model, le, confidence=0.5):
+def classify_images(location, detector, model, le, confidence=0.9):
 	"""
 	From a image folder location:
 	1. Create a real and fake image folder in the current image folder itself. (Only if there aren't such a folder)
@@ -82,9 +86,9 @@ def classify_images(location, detector, model, le, confidence=0.5):
 	}
 
 	# Create Folders
-	real_location = os.path.join(location, 'real')
-	fake_location = os.path.join(location, 'fake')
-	noface_location = os.path.join(location, 'noface')
+	real_location = os.path.join(external_data_location, location, 'real')
+	fake_location = os.path.join(external_data_location, location, 'fake')
+	noface_location = os.path.join(external_data_location, location, 'noface')
 	if not glob(real_location):
 		os.mkdir(real_location)
 	if not glob(fake_location):
@@ -95,19 +99,20 @@ def classify_images(location, detector, model, le, confidence=0.5):
 	# Load Models
 	# Load our serialized face detector from disk
 	print("[INFO] loading face detector...")
-	protoPath = os.path.join("neural", "detectors", args["detector"], "deploy.prototxt")
-	modelPath = os.path.join("neural", "detectors", args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
+	protoPath = os.path.join(models_location, "detectors", args["detector"], "deploy.prototxt")
+	modelPath = os.path.join(models_location, "detectors", args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
 	net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
 	# Load the liveness detector model and label encoder from disk
 	print("[INFO] loading liveness detector...")
-	classifiermodelpath = os.path.join('neural', 'models', args['model'])
+	classifiermodelpath = os.path.join(models_location, 'models', args['model'])
 	model = load_model(classifiermodelpath)
-	le = pickle.loads(open(os.path.join('neural', args["le"]), "rb").read())
+	le = pickle.loads(open(os.path.join(models_location, 'labels', args["le"]), "rb").read())
 
 	# Grab all images from given folder
-	images = glob(os.path.join(location, '*.png'))
-	jpg_images = glob(os.path.join(location, '*.jpg'))
+	unsorted_folder = os.path.join(external_data_location, location, 'unsorted')
+	images = glob(os.path.join(unsorted_folder, '*.png'))
+	jpg_images = glob(os.path.join(unsorted_folder, '*.jpg'))
 	images.extend(jpg_images)
 
 	# Maintain counters for all types of images
@@ -163,6 +168,7 @@ def classify_images_s3(s3bucket, s3folderpath, detector, model, le, confidence=0
 		 real images --> hubble-datalake/images/profilepics/real
 		 fake images --> hubble-datalake/images/profilepics/fake
 	"""
+	pass
 	
 	
 
@@ -247,6 +253,18 @@ def label(frame, net, model, le, confidence):
 
 	return frame, contains_fake, detected_faces
 
+
+def find_datafolder():
+    """
+    Return parent folder, unsorted folder, real folder and spoof folder
+    """
+    original_folder = join(abspath('.'), 'data')
+
+    unsorted_folder = join(original_folder, 'unsorted')
+    category1_folder = join(original_folder, 'real')
+    category2_folder = join(original_folder, 'spoof')
+
+    return original_folder, unsorted_folder, category1_folder, category2_folder
 
 
 

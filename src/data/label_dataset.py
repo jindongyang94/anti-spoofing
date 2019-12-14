@@ -2,12 +2,17 @@
 The aim of this script is to be able to detect anti spoofing using an existing training model to help set up the initial dataset,
 and then curate from there again.
 """
-import cv2
-import os, shutil
+import os
+import shutil
 from glob import glob
+from os.path import abspath, dirname, join
+
+import cv2
+import fire
 from tqdm import tqdm
 
-from helper import logger
+from src.modules.aws_helper import logger
+
 
 def show_images(location):
     """
@@ -27,7 +32,7 @@ def show_images(location):
             break
     return
 
-def categorise_images(old_location, cat1_location, cat2_location):
+def label_images(old_location, cat1_location, cat2_location):
     """
     Go into unsorted, and move images into either real or spoof
     """
@@ -78,11 +83,23 @@ def categorise_images_based_on_model(old_location, cat1_location, cat2_location)
 
     pass
 
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+## Sub Functions
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+def find_datafolder():
+    """
+    Return parent folder, unsorted folder, real folder and spoof folder
+    """
+    original_folder = join(abspath('.'), 'data')
+
+    unsorted_folder = join(original_folder, 'unsorted')
+    category1_folder = join(original_folder, 'real')
+    category2_folder = join(original_folder, 'spoof')
+
+    return original_folder, unsorted_folder, category1_folder, category2_folder
+
+
 
 if __name__ == "__main__":
-    location = 'dataset/unsorted'
-    # show_images(location)
-    category1_location = 'dataset/real'
-    category2_location = 'dataset/spoof'
-
-    logger.info(categorise_images(location, category1_location, category2_location))
+    original_folder, unsorted_folder, category1_folder, category2_folder = find_datafolder()
+    logger.info(label_images(unsorted_folder, category1_folder, category2_folder))
