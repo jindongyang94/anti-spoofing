@@ -79,7 +79,7 @@ def download_images():
     Simply a wrapper function to call what is already defined.
     """
     local_folderpath = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/data/external/attendance_photos'
-    logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=100, limit=500))
+    logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=0, limit=500))
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Sub Functions

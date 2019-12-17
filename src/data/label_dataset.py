@@ -12,6 +12,8 @@ import fire
 from tqdm import tqdm
 
 from src.modules.aws_helper import logger
+from src.modules.config import (external_data_location, models_location,
+                                processed_data_location, working_directory)
 
 
 def show_images(location):
@@ -27,10 +29,11 @@ def show_images(location):
         cv2.imshow("Profile Pic", img)
         key = cv2.waitKey()
         cv2.destroyAllWindows()
-        #if ESC is pressed, exit loop
+        # if ESC is pressed, exit loop
         if key == 27:
             break
     return
+
 
 def label_images(old_location, cat1_location, cat2_location):
     """
@@ -38,7 +41,8 @@ def label_images(old_location, cat1_location, cat2_location):
     """
     files = glob("%s/*.jpg" % old_location)
     while files:
-        logger.info("There are %s files in location: %s" % (len(files), old_location))
+        logger.info("There are %s files in location: %s" %
+                    (len(files), old_location))
 
         bar = tqdm(files, dynamic_ncols=True, desc='Bar desc', leave=True)
         for filename in files:
@@ -47,7 +51,7 @@ def label_images(old_location, cat1_location, cat2_location):
             key = cv2.waitKey()
             cv2.destroyAllWindows()
 
-            #if ESC is pressed, exit loop
+            # if ESC is pressed, exit loop
             if key == 27:
                 return "Labelling Terminated."
 
@@ -67,13 +71,14 @@ def label_images(old_location, cat1_location, cat2_location):
 
                 catname = str(cat2_location.split('/')[-1])
                 bar.set_description("%s moved to %s Folder" % (fname, catname))
-            
+
             bar.update(1)
             bar.refresh()
 
         files = glob("%s/*.jpg" % old_location)
 
     return "All Images Moved."
+
 
 def categorise_images_based_on_model(old_location, cat1_location, cat2_location):
     """
@@ -84,8 +89,10 @@ def categorise_images_based_on_model(old_location, cat1_location, cat2_location)
     pass
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
-## Sub Functions
+# Sub Functions
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+
+
 def find_datafolder():
     """
     Return parent folder, unsorted folder, real folder and spoof folder
@@ -99,7 +106,7 @@ def find_datafolder():
     return original_folder, unsorted_folder, category1_folder, category2_folder
 
 
-
 if __name__ == "__main__":
     original_folder, unsorted_folder, category1_folder, category2_folder = find_datafolder()
-    logger.info(label_images(unsorted_folder, category1_folder, category2_folder))
+    logger.info(label_images(unsorted_folder,
+                             category1_folder, category2_folder))

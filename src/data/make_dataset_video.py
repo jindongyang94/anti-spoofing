@@ -1,7 +1,10 @@
 """
 USAGE
-python gather_examples.py -i videos -d face_detector -s 8 -r 1
-python gather_examples.py -i videos -d face_detector -s 6 -r 0
+
+The purpose of this script is to convert all videos in the external data folder into frames (in the processed folder) to be used for training.
+
+python make_dataset_video.py -i portrait_videos -d face_detector -s 8 -r 1
+python make_dataset_video.py -i portrait_videos -d face_detector -s 6 -r 0
 """
 
 import argparse
@@ -12,7 +15,7 @@ import cv2
 import numpy as np
 
 from src.modules.config import (external_data_location, models_location,
-                                working_directory)
+                                processed_data_location, working_directory)
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
 # Video Processing
@@ -32,7 +35,7 @@ def bulk_processing(args):
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Split the videos into two batches: real and fake
-    video_dir = args['input']
+    video_dir = os.path.join(external_data_location, args['input'])
     video_sub_folders = os.path.sep.join([video_dir, '*/'])
     video_sub_folders = glob(video_sub_folders)
 
@@ -40,7 +43,7 @@ def bulk_processing(args):
 
         # Detect video type and dataset path
         videotype = str(os.path.split(sub_folder)[-2])
-        datasetpath = os.path.sep.join(['dataset', videotype])
+        images_location = os.path.sep.join([processed_data_location, args['input'], videotype])
 
         # Iterate through all videos in each folder
         videos = glob(os.path.sep.join([sub_folder, '*.mov']))
@@ -50,8 +53,8 @@ def bulk_processing(args):
         saved = 0
 
         # open up existing images in the current folder and append to it instead of overwriting it
-        images = glob(os.path.sep.join([datasetpath, "*.png"]))
-        images.extend(glob(os.path.sep.join([datasetpath, '*.jpg'])))
+        images = glob(os.path.sep.join([images_location, "*.png"]))
+        images.extend(glob(os.path.sep.join([images_location, '*.jpg'])))
         if args['reset']:
             for im in images:
                 os.remove(im)
@@ -109,7 +112,7 @@ def bulk_processing(args):
 
                         # write the frame to disk
                         p = os.path.sep.join(
-                            [datasetpath, "{}.png".format(saved)])
+                            [images_location, "{}.png".format(saved)])
                         cv2.imwrite(p, face)
                         saved += 1
                         print("[INFO] saved {} to disk".format(p))
