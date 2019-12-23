@@ -1,8 +1,7 @@
 """
-USAGE
-
 The purpose of this script is to convert all videos in the external data folder into frames (in the processed folder) to be used for training.
 
+USAGE:
 python make_dataset_video.py -i portrait_videos -d face_detector -s 8 -r 1
 python make_dataset_video.py -i portrait_videos -d face_detector -s 6 -r 0
 """
@@ -14,8 +13,8 @@ from glob import glob
 import cv2
 import numpy as np
 
-from modules.config import (external_data_location, logger, models_location,
-                            processed_data_location, working_directory)
+from modules.config import (EXTERNAL_DATA_DIR, logger, MODELS_DIR,
+                            PROCESSED_DATA_DIR, WORKING_DIR)
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
 # Video Processing
@@ -27,14 +26,14 @@ def bulk_processing(args):
     """
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join(models_location, "detectors",
+    protoPath = os.path.join(MODELS_DIR, "detectors",
                              args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(models_location, "detectors",
+    modelPath = os.path.join(MODELS_DIR, "detectors",
                              args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Split the videos into two batches: real and fake
-    video_dir = os.path.join(external_data_location, args['input'])
+    video_dir = os.path.join(EXTERNAL_DATA_DIR, args['input'])
     video_sub_folders = os.path.sep.join([video_dir, '*/'])
     video_sub_folders = glob(video_sub_folders)
 
@@ -42,7 +41,7 @@ def bulk_processing(args):
 
         # Detect video type and dataset path
         videotype = str(os.path.split(sub_folder)[-2])
-        images_location = os.path.sep.join([processed_data_location, args['input'], videotype])
+        images_location = os.path.sep.join([PROCESSED_DATA_DIR, args['input'], videotype])
 
         # Iterate through all videos in each folder
         videos = glob(os.path.sep.join([sub_folder, '*.mov']))

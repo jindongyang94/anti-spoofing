@@ -1,5 +1,5 @@
 """
-USAGE
+USAGE:
 python test.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
 python test.py classify_images --location=/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/data/external \
 	--model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
@@ -22,9 +22,9 @@ from keras.preprocessing.image import img_to_array
 from tqdm import tqdm
 
 from modules.aws_helper import S3Helper
-from modules.config import (DATALAKE_NAME, PROFILEIMG_FOLDER,
-                            external_data_location, logger, models_location,
-                            working_directory)
+from modules.config import (DATALAKE_NAME, DETECTORS_DIR, EXTERNAL_DATA_DIR,
+                            INTERIM_DATA_DIR, LABELS_DIR, NN_MODELS_DIR,
+                            PROFILEIMG_FOLDER, WORKING_DIR, logger)
 
 
 def video_demo(model, le, detector, confidence=0.5):
@@ -40,17 +40,19 @@ def video_demo(model, le, detector, confidence=0.5):
 
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join("neural", "detectors",
+    protoPath = os.path.join(DETECTORS_DIR,
                              args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(
-        "neural", "detectors", args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
+    modelPath = os.path.join(DETECTORS_DIR,
+                             args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
-    # load the liveness detector model and label encoder from disk
+    # Load the liveness detector model and label encoder from disk
     print("[INFO] loading liveness detector...")
-    classifiermodelpath = os.path.join('neural', 'models', args['model'])
+    classifiermodelpath = os.path.join(
+        NN_MODELS_DIR, args['model'])
     model = load_model(classifiermodelpath)
-    le = pickle.loads(open(os.path.join('neural', args["le"]), "rb").read())
+    le = pickle.loads(
+        open(os.path.join(LABELS_DIR, args["le"]), "rb").read())
 
     # initialize the video stream and allow the camera sensor to warmup
     print("[INFO] starting video stream...")
@@ -90,9 +92,9 @@ def classify_images(location, detector, model, le, confidence=0.9):
     }
 
     # Create Folders
-    real_location = os.path.join(external_data_location, location, 'real')
-    fake_location = os.path.join(external_data_location, location, 'fake')
-    noface_location = os.path.join(external_data_location, location, 'noface')
+    real_location = os.path.join(INTERIM_DATA_DIR, location, 'real')
+    fake_location = os.path.join(INTERIM_DATA_DIR, location, 'fake')
+    noface_location = os.path.join(INTERIM_DATA_DIR, location, 'noface')
     if not glob(real_location):
         os.mkdir(real_location)
     if not glob(fake_location):
@@ -103,23 +105,23 @@ def classify_images(location, detector, model, le, confidence=0.9):
     # Load Models
     # Load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join(models_location, "detectors",
+    protoPath = os.path.join(DETECTORS_DIR,
                              args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(models_location, "detectors",
+    modelPath = os.path.join(DETECTORS_DIR,
                              args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Load the liveness detector model and label encoder from disk
     print("[INFO] loading liveness detector...")
     classifiermodelpath = os.path.join(
-        models_location, 'models', args['model'])
+        NN_MODELS_DIR, args['model'])
     model = load_model(classifiermodelpath)
     le = pickle.loads(
-        open(os.path.join(models_location, 'labels', args["le"]), "rb").read())
+        open(os.path.join(LABELS_DIR, args["le"]), "rb").read())
 
     # Grab all images from given folder
     unsorted_folder = os.path.join(
-        external_data_location, location, 'unsorted')
+        EXTERNAL_DATA_DIR, location)
     images = glob(os.path.join(unsorted_folder, '*.png'))
     jpg_images = glob(os.path.join(unsorted_folder, '*.jpg'))
     images.extend(jpg_images)

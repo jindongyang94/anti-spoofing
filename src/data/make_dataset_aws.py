@@ -1,3 +1,8 @@
+"""
+USAGE:
+python make_dataset_aws.py download_images attendance_photos 0 500
+python make_dataset_aws.py migrate_pictures
+"""
 import os
 from pprint import pformat, pprint
 
@@ -7,7 +12,7 @@ from tqdm import tqdm, trange
 
 from modules.aws_helper import S3Helper
 from modules.config import (DATALAKE_NAME, PROFILEIMG_FOLDER,
-                            external_data_location, logger)
+                            EXTERNAL_DATA_DIR, logger)
 
 
 """
@@ -16,9 +21,7 @@ Company --> hubble/attendances/attendance/(check_in_photo or check_out_photo)/(n
 or (thumb_check_in or out_photo.jpg
 
 For now, we can ignore the thumbnails as we want to have higher resolution pictures. 
-
-Usage: python make_dataset_aws.py download_images attendance_photos 0 500
-       python make_dataset_aws.py migrate_pictures
+The thumbnails will be useful if we want to train the model with lower resolution pictures to increase robustness. 
 """
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
@@ -83,7 +86,7 @@ def download_images(folder, start_index, limit):
     """
     Simply a wrapper function to call what is already defined.
     """
-    local_folderpath = os.path.join(external_data_location, folder)
+    local_folderpath = os.path.join(EXTERNAL_DATA_DIR, folder)
     logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=start_index, limit=limit))
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
-# USAGE
-# python train.py train --dataset=dataset --model=vgg16_pretrained.model --le=le.pickle
+"""
+USAGE:
+python train.py train --dataset=dataset --model=vgg16_pretrained.model --le=le.pickle
+"""
 
 import argparse
 import os
@@ -20,7 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 # import the necessary packages
-from modules.nn import Model
+from modules.nn_train_helper import Model
 
 # set the matplotlib backend so figures can be saved in the background
 matplotlib.use('TkAgg')

@@ -4,6 +4,7 @@ import boto3
 
 from modules.config import DATALAKE_NAME, PROFILEIMG_FOLDER
 
+
 # Class Methods (Should encapsulate all s3 and rds methods to make the work easier to understand) ----------------------------------
 class S3Helper:
     """

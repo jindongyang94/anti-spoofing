@@ -1,12 +1,13 @@
 import os
 import logging
 
-## Logger --------------------------------------------------------------------------------------
+# Logger --------------------------------------------------------------------------------------
 try:
     import colorlog
     HAVE_COLORLOG = True
 except ImportError:
     HAVE_COLORLOG = False
+
 
 def create_logger():
     """
@@ -30,20 +31,31 @@ def create_logger():
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     log.addHandler(stream_handler)
-    return logging.getLogger(__name__) 
+    return logging.getLogger(__name__)
+
 
 logger = create_logger()
 
+# S3 LOCATIONS -------------------------------------------------------------------------------------------
 DATALAKE_NAME = 'hubble-datalake1'
 
 PROFILEIMG_FOLDER = 'images/profile_pics'
 
-working_directory = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection'
+# LOCAL WORKING DIRECTORIES --------------------------------------------------------------------------------
+WORKING_DIR = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection'
 
-external_data_location = os.path.join(working_directory, 'data/external')
+EXTERNAL_DATA_DIR = os.path.join(WORKING_DIR, 'data/external')
 
-interim_data_location = os.path.join(working_directory, 'data/interim')
+INTERIM_DATA_DIR = os.path.join(WORKING_DIR, 'data/interim')
 
-processed_data_location = os.path.join(working_directory, 'data/processed')
+PROCESSED_DATA_DIR = os.path.join(WORKING_DIR, 'data/processed')
 
-models_location = os.path.join(working_directory, 'models')
+MODELS_DIR = os.path.join(WORKING_DIR, 'models')
+
+NN_MODELS_DIR = os.path.join(MODELS_DIR, 'nn_models')
+
+NN_WEIGHTS_DIR = os.path.join(MODELS_DIR, 'nn_pretrained_weights')
+
+DETECTORS_DIR = os.path.join(MODELS_DIR, 'detectors')
+
+LABELS_DIR = os.path.join(MODELS_DIR, 'labels')

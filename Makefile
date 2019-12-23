@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 tree classify video
+.PHONY: clean requirements tree aws_buckets classify data_video data_label
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
@@ -24,34 +24,10 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
-## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
-
 ## Delete all compiled Python files
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
-
-## Lint using flake8
-lint:
-	flake8 src
-
-## Upload Data to S3
-sync_data_to_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
-else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
-endif
-
-## Download Data from S3
-sync_data_from_s3:
-ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
-else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
-endif
 
 ## Set up python interpreter environment
 create_environment:
@@ -80,22 +56,40 @@ test_environment:
 #################################################################################
 
 ## Display file structures and content
+## USAGE: make tree
 tree:
-	tree -I '*.png|*.jpg|*.pyc|*.mov|*.mp4|*pycache*'
+	tree -I '*.png|*.jpg|*.pyc|*.mov|*.mp4|*pycache*|*.doctree|*.rst*|*.js|*.html|*.css'
+
+## AWS List all relevant buckets from AWS
+## USAGE: make aws_buckets
+aws_buckets:
+	$(PYTHON_INTERPRETER) src/data/make_dataset_aws.py list_buckets
+
+## Make Dataset from AWS - Download images from S3
+## USAGE: make data_aws location=attendance_photos start=0 limit=500
+data_aws: 
+	$(PYTHON_INTERPRETER) src/data/make_dataset_aws.py download_images $(location) $(start) $(limit)
+
+## Make Dataset from Video - Split videos into frames to be stored
+## USAGE: make data_video location=portrait_videos detector=face_detector skip=8 reset=0
+data_video:
+	$(PYTHON_INTERPRETER) src/data/make_dataset_video.py -i $(location) -d $(detector) -s $(skip) -r $(reset)
+
+## Label Images
+## USAGE: make data_label location=attendance_photos
+data_label:
+	$(PYTHON_INTERPRETER) src/features/label_dataset.py label_images $(location)
 
 ## Classify images based on trained model
+## USAGE: make classify location=attendance_photos
 classify:
-	python src/models/predict.py classify_images --location=attendance_photos \
+	$(PYTHON_INTERPRETER) src/models/predict.py classify_images --location=$(location) \
 	--model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
 
 ## Start video based on trained model
-video:
-	python neural/test.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
-
-#################################################################################
-# PROJECT RULES                                                                 #
-#################################################################################
-
+## USAGE: make predict_video 
+predict_video:
+	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
 
 #################################################################################
 # Self Documenting Commands                                                     #
