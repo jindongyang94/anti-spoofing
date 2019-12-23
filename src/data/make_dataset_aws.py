@@ -5,7 +5,9 @@ import boto3
 import fire
 from tqdm import tqdm, trange
 
-from src.modules.aws_helper import DATALAKE_NAME, PROFILEIMG_FOLDER, S3Helper, logger
+from modules.aws_helper import S3Helper
+from modules.config import (DATALAKE_NAME, PROFILEIMG_FOLDER,
+                            external_data_location, logger)
 
 
 """
@@ -14,6 +16,9 @@ Company --> hubble/attendances/attendance/(check_in_photo or check_out_photo)/(n
 or (thumb_check_in or out_photo.jpg
 
 For now, we can ignore the thumbnails as we want to have higher resolution pictures. 
+
+Usage: python make_dataset_aws.py download_images attendance_photos 0 500
+       python make_dataset_aws.py migrate_pictures
 """
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
@@ -74,12 +79,12 @@ def list_buckets():
     paths = [check_in_key, check_out_key]
     return __list_buckets(paths)
 
-def download_images():
+def download_images(folder, start_index, limit):
     """
     Simply a wrapper function to call what is already defined.
     """
-    local_folderpath = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection/data/external/attendance_photos'
-    logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=0, limit=500))
+    local_folderpath = os.path.join(external_data_location, folder)
+    logger.info(__download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=start_index, limit=limit))
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Sub Functions
@@ -118,7 +123,7 @@ def __list_buckets(paths):
 def __download_images(bucketname, folderpath, location, start_index = 0, limit=100):
     """
     This function is simply gonna download the first 100 images (maybe next time done in random?)
-    from the bucket to this repo under 'dataset/unsorted/'
+    from the bucket to this repo under 'external/'
     """
     s3 = S3Helper()
     keypaths = s3.list_objects(bucketname, folderpath)
@@ -148,9 +153,5 @@ def __download_images(bucketname, folderpath, location, start_index = 0, limit=1
 
 
 if __name__ == "__main__":
-    # migrate_pictures()
-    # local_folderpath = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_picinpic/dataset/unsorted'
-    # logger.info(download_images(DATALAKE_NAME, PROFILEIMG_FOLDER, local_folderpath, start_index=100, limit=500))
-
     # Fire is a library for automatically generating command line interfaces (CLIs) from absolutely any Python object
     fire.Fire()

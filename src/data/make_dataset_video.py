@@ -14,13 +14,12 @@ from glob import glob
 import cv2
 import numpy as np
 
-from src.modules.config import (external_data_location, models_location,
-                                processed_data_location, working_directory)
+from modules.config import (external_data_location, logger, models_location,
+                            processed_data_location, working_directory)
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
 # Video Processing
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
-
 
 def bulk_processing(args):
     """

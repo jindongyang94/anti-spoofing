@@ -11,9 +11,8 @@ import cv2
 import fire
 from tqdm import tqdm
 
-from src.modules.aws_helper import logger
-from src.modules.config import (external_data_location, models_location,
-                                processed_data_location, working_directory)
+from modules.config import (external_data_location, models_location,
+                            processed_data_location, working_directory, logger)
 
 
 def show_images(location):

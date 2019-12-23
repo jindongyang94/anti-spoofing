@@ -1,8 +1,6 @@
 """
 For image processing primarily for my own entertainment. HAHA
 """
-
-
 import cv2
 import numpy as np
 
