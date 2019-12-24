@@ -25,7 +25,7 @@ def create_logger():
                   'ERROR': 'bold_red',
                   'CRITICAL': 'bold_red'}
         formatter = colorlog.ColoredFormatter(cformat, date_format,
-                                              log_colors=colors)
+                                              log_colors=colors)    
     else:
         formatter = logging.Formatter(format_str, date_format)
     stream_handler = logging.StreamHandler()
@@ -59,3 +59,7 @@ NN_WEIGHTS_DIR = os.path.join(MODELS_DIR, 'nn_pretrained_weights')
 DETECTORS_DIR = os.path.join(MODELS_DIR, 'detectors')
 
 LABELS_DIR = os.path.join(MODELS_DIR, 'labels')
+
+REPORTS_DIR = os.path.join(WORKING_DIR, 'reports')
+
+FIGURES_DIR = os.path.join(REPORTS_DIR, 'figures')

@@ -6,6 +6,8 @@ from keras.layers.core import Activation, Dense, Dropout, Flatten
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
 
+from modules.config import NN_WEIGHTS_DIR
+
 
 class Model:
 	def __init__(self, width, height, depth, classes):
@@ -100,7 +102,7 @@ class Model:
 		model.add(Conv2D(512, (3, 3), activation='relu', name='conv5_3'))
 		model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
-		weights_path = os.path.join('neural', 'pretrained_weights', 'vgg16_weights.h5')
+		weights_path = os.path.join(NN_WEIGHTS_DIR, 'vgg16_weights.h5')
 		model.load_weights(weights_path, by_name=True)
 
 		top_model = Sequential()

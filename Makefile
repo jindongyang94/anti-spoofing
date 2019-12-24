@@ -52,7 +52,7 @@ test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
 
 #################################################################################
-# PROJECT SPECIFIC COMMANDS                                                                 #
+# PROJECT SPECIFIC COMMANDS                                                     #
 #################################################################################
 
 ## Display file structures and content
@@ -80,6 +80,10 @@ data_video:
 data_label:
 	$(PYTHON_INTERPRETER) src/features/label_dataset.py label_images $(location)
 
+
+train:
+	$(PYTHON_INTERPRETER) src/models/train.py train --dataset=$(location) --model=$(model) --le=$(label)
+
 ## Classify images based on trained model
 ## USAGE: make classify location=attendance_photos
 classify:
@@ -90,6 +94,13 @@ classify:
 ## USAGE: make predict_video 
 predict_video:
 	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
+
+## Pipeline Command to breakdown videos into frames, then retrain the model based on new pictures and start video to check results.
+## USAGE: make pipeline_video location=all model=vgg16_pretrained.model label=le.pickle
+pipeline_video:
+	$(PYTHON_INTERPRETER) src/data/make_dataset_video.py -i portrait_videos -d face_detector -s 6 -r 1
+	$(PYTHON_INTERPRETER) src/models/train.py train --dataset=$(location) --model=$(model) --le=$(label)
+	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=$(model) --le=$(label) --detector=face_detector
 
 #################################################################################
 # Self Documenting Commands                                                     #

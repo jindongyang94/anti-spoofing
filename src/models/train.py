@@ -1,6 +1,6 @@
 """
 USAGE:
-python train.py train --dataset=dataset --model=vgg16_pretrained.model --le=le.pickle
+python train.py train --dataset=portrait_videos --model=vgg16_pretrained.model --le=le.pickle
 """
 
 import argparse
@@ -21,7 +21,8 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-# import the necessary packages
+from modules.config import (FIGURES_DIR, LABELS_DIR, NN_MODELS_DIR,
+                            PROCESSED_DATA_DIR)
 from modules.nn_train_helper import Model
 
 # set the matplotlib backend so figures can be saved in the background
@@ -31,7 +32,14 @@ matplotlib.use('TkAgg')
 def train(dataset, model, le, plot='plot.png'):
     """
     Function Wrapper to initialize training using Keras Model.
+
+    Training can train by taking all pictures from all subfolders, but please make sure that the labels are CONSISTENT.
+    Make sure that the direct folder name is also the label name as well. 
     """
+    # if dataset == all, we take all folders in the PROCESSED_DATA_DIR
+    if dataset == 'all':
+        dataset = PROCESSED_DATA_DIR
+
     args = {
         'dataset': dataset,
         'model': model,
@@ -43,25 +51,26 @@ def train(dataset, model, le, plot='plot.png'):
     # epochs to train for
     INIT_LR = 1e-4
     BS = 8
-    EPOCHS = 50
+    EPOCHS = 100
 
     # grab the list of images in our dataset directory, then initialize
     # the list of data (i.e., images) and class images
     print("[INFO] loading images...")
-    imagePaths = list(paths.list_images(args["dataset"]))
+    dataset_path = os.path.join(PROCESSED_DATA_DIR, args['dataset'])
+    image_paths = list(paths.list_images(dataset_path))
     data = []
     labels = []
 
-    for imagePath in imagePaths:
+    for image_path in image_paths:
         # extract the class label from the filename, load the image and
         # resize it to be a fixed 32x32 pixels, ignoring aspect ratio
-        label = imagePath.split(os.path.sep)[-2]
+        label = image_path.split(os.path.sep)[-2]
         try:
-            image = cv2.imread(imagePath)
+            image = cv2.imread(image_path)
             image = cv2.resize(image, (32, 32))
         except Exception as e:
             print("Image %s is broken. Continue.." %
-                  imagePath.split(os.path.sep)[-2:])
+                  image_path.split(os.path.sep)[-2:])
             continue
 
         # update the data and labels lists, respectively
@@ -136,18 +145,19 @@ def train(dataset, model, le, plot='plot.png'):
 
     # save the network to disk
     print("[INFO] serializing network to '{}'...".format(args["model"]))
-    modelpath = 'models/' + args['model']
-    model.save(modelpath)
+    model_path = os.path.join(NN_MODELS_DIR, args['model'])
+    model.save(model_path)
 
     # save the label encoder to disk
-    f = open(args["le"], "wb")
+    le_path = os.path.join(LABELS_DIR, args['le'])
+    f = open(le_path, "wb")
     f.write(pickle.dumps(le))
     f.close()
 
     # plot the training loss and accuracy
     plt.style.use("ggplot")
     plt.figure()
-    print(H.history.keys())
+    # print(H.history.keys())
     plt.plot(np.arange(0, EPOCHS), H.history["loss"], label="train_loss")
     plt.plot(np.arange(0, EPOCHS), H.history["val_loss"], label="val_loss")
     plt.plot(np.arange(0, EPOCHS), H.history["accuracy"], label="train_acc")
@@ -156,8 +166,8 @@ def train(dataset, model, le, plot='plot.png'):
     plt.xlabel("Epoch #")
     plt.ylabel("Loss/Accuracy")
     plt.legend(loc="lower left")
-    plotpath = 'plots/' + args["plot"]
-    plt.savefig(plotpath)
+    plot_path = os.path.join(FIGURES_DIR, args["plot"])
+    plt.savefig(plot_path)
     plt.show()
 
 

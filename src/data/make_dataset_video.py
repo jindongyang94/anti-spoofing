@@ -40,7 +40,7 @@ def bulk_processing(args):
     for sub_folder in video_sub_folders:
 
         # Detect video type and dataset path
-        videotype = str(os.path.split(sub_folder)[-2])
+        videotype = str(sub_folder.split('/')[-2])
         images_location = os.path.sep.join([PROCESSED_DATA_DIR, args['input'], videotype])
 
         # Iterate through all videos in each folder
