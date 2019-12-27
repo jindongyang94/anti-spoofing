@@ -24,7 +24,8 @@ from tqdm import tqdm
 from modules.aws_helper import S3Helper
 from modules.config import (DATALAKE_NAME, DETECTORS_DIR, EXTERNAL_DATA_DIR,
                             INTERIM_DATA_DIR, LABELS_DIR, NN_MODELS_DIR,
-                            PROFILEIMG_FOLDER, WORKING_DIR, logger)
+                            PROFILEIMG_FOLDER, WORKING_DIR, logger, find_model)
+from modules.nn_predict_helper import label_with_face_detector_original, label_with_face_detector_ultra
 
 
 def video_demo(model, le, detector, confidence=0.5):
@@ -40,10 +41,9 @@ def video_demo(model, le, detector, confidence=0.5):
 
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join(DETECTORS_DIR,
-                             args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(DETECTORS_DIR,
-                             args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
+    face_detector_path = os.path.join(DETECTORS_DIR, args['detector'])
+    protoPath = find_model(face_detector_path, 'prototxt')
+    modelPath = find_model(face_detector_path, "caffemodel")     
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Load the liveness detector model and label encoder from disk
@@ -64,7 +64,7 @@ def video_demo(model, le, detector, confidence=0.5):
         # grab the frame from the threaded video stream and resize it
         # to have a maximum width of 600 pixels
         frame = vs.read()
-        frame, _, _ = label(frame, net, model, le, args['confidence'])
+        frame, _, _ = label_with_face_detector_ultra(frame, net, model, le, args['confidence'])
         # show the output frame and wait for a key press
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
@@ -105,16 +105,14 @@ def classify_images(location, detector, model, le, confidence=0.9):
     # Load Models
     # Load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join(DETECTORS_DIR,
-                             args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(DETECTORS_DIR,
-                             args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
+    face_detector_path = os.path.join(DETECTORS_DIR, args['detector'])
+    protoPath = find_model(face_detector_path, 'prototxt')
+    modelPath = find_model(face_detector_path, "caffemodel")     
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Load the liveness detector model and label encoder from disk
     print("[INFO] loading liveness detector...")
-    classifiermodelpath = os.path.join(
-        NN_MODELS_DIR, args['model'])
+    classifiermodelpath = os.path.join(NN_MODELS_DIR, args['model'])
     model = load_model(classifiermodelpath)
     le = pickle.loads(
         open(os.path.join(LABELS_DIR, args["le"]), "rb").read())
@@ -134,7 +132,7 @@ def classify_images(location, detector, model, le, confidence=0.9):
     bar = tqdm(images, dynamic_ncols=True, desc='Bar desc', leave=True)
     for image in bar:
         frame = cv2.imread(image)
-        frame, contains_fake, detected_faces = label(
+        frame, contains_fake, detected_faces = label_with_face_detector_original(
             frame, net, model, le, confidence)
 
         # Relocate the image based on whether it is fake, real or noface
@@ -198,98 +196,8 @@ def classify_images_s3(s3bucket, s3folderpath, detector, model, le, confidence=0
 
 
 # --------------------------------------------------------------------------------------------------------------------------
-def label(frame, net, model, le, confidence):
-    """
-    Classify an image based on model given.
-    """
-    frame = imutils.resize(frame, width=600)
-
-    # flip the frame
-    frame = cv2.flip(frame, 1)
-
-    # grab the frame dimensions and convert it to a blob
-    (h, w) = frame.shape[:2]
-    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,
-                                 (300, 300), (104.0, 177.0, 123.0))
-
-    # pass the blob through the network and obtain the detections and
-    # predictions
-    net.setInput(blob)
-    detections = net.forward()
-
-    # maintain a label if the image is false or not
-    contains_fake = False
-
-    # maintain number of faces detected
-    detected_faces = 0
-
-    # loop over the detections
-    for i in range(0, detections.shape[2]):
-        # extract the confidence (i.e., probability) associated with the
-        # prediction
-        detected_confidence = detections[0, 0, i, 2]
-
-        # filter out weak detections
-        if detected_confidence > confidence:
-            detected_faces += 1
-            # compute the (x, y)-coordinates of the bounding box for
-            # the face and extract the face ROI
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            (startX, startY, endX, endY) = box.astype("int")
-
-            # ensure the detected bounding box does fall outside the
-            # dimensions of the frame
-            startX = max(0, startX)
-            startY = max(0, startY)
-            endX = min(w, endX)
-            endY = min(h, endY)
-
-            # extract the face ROI and then preproces it in the exact
-            # same manner as our training data
-            try:
-                face = frame[startY:endY, startX:endX]
-                face = cv2.resize(face, (32, 32))
-                face = face.astype("float") / 255.0
-                face = img_to_array(face)
-                face = np.expand_dims(face, axis=0)
-            except:
-                continue
-
-            # pass the face ROI through the trained liveness detector
-            # model to determine if the face is "real" or "fake"
-            preds = model.predict(face)[0]
-            j = np.argmax(preds)
-            label = le.classes_[j]
-
-            # draw the label and bounding box on the frame
-            if label == 'real':
-                label = "{}: {:.4f}".format(label, preds[j])
-                cv2.putText(frame, label, (startX, startY - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                cv2.rectangle(frame, (startX, startY), (endX, endY),
-                              (0, 255, 0), 2)
-            else:
-                contains_fake = True
-                label = "{}: {:.4f}".format(label, preds[j])
-                cv2.putText(frame, label, (startX, startY - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                cv2.rectangle(frame, (startX, startY), (endX, endY),
-                              (0, 0, 255), 2)
-
-    return frame, contains_fake, detected_faces
-
-
-def find_datafolder():
-    """
-    Return parent folder, unsorted folder, real folder and spoof folder
-    """
-    original_folder = join(abspath('.'), 'data')
-
-    unsorted_folder = join(original_folder, 'unsorted')
-    category1_folder = join(original_folder, 'real')
-    category2_folder = join(original_folder, 'spoof')
-
-    return original_folder, unsorted_folder, category1_folder, category2_folder
+# Sub Functions
+# --------------------------------------------------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":

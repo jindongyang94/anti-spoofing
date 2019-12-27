@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 from modules.config import (EXTERNAL_DATA_DIR, logger, MODELS_DIR,
-                            PROCESSED_DATA_DIR, WORKING_DIR)
+                            PROCESSED_DATA_DIR, WORKING_DIR, DETECTORS_DIR, find_model)
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
 # Video Processing
@@ -26,10 +26,9 @@ def bulk_processing(args):
     """
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.join(MODELS_DIR, "detectors",
-                             args["detector"], "deploy.prototxt")
-    modelPath = os.path.join(MODELS_DIR, "detectors",
-                             args["detector"], "res10_300x300_ssd_iter_140000.caffemodel")
+    face_detector_path = os.path.join(DETECTORS_DIR, args['detector'])
+    protoPath = find_model(face_detector_path, 'prototxt')
+    modelPath = find_model(face_detector_path, "caffemodel")                     
     net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
     # Split the videos into two batches: real and fake

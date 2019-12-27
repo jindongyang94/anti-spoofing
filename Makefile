@@ -80,7 +80,8 @@ data_video:
 data_label:
 	$(PYTHON_INTERPRETER) src/features/label_dataset.py label_images $(location)
 
-
+## Train selected model
+## USAGE: make train location=all model=vgg16_pretrained.model label=le.pickle
 train:
 	$(PYTHON_INTERPRETER) src/models/train.py train --dataset=$(location) --model=$(model) --le=$(label)
 
@@ -91,16 +92,16 @@ classify:
 	--model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
 
 ## Start video based on trained model
-## USAGE: make predict_video 
+## USAGE: make predict_video model=vgg16_pretrained.model detector=face_RFB
 predict_video:
-	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=vgg16_pretrained.model --le=le.pickle --detector=face_detector
+	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=$(model) --le=le.pickle --detector=$(detector)
 
 ## Pipeline Command to breakdown videos into frames, then retrain the model based on new pictures and start video to check results.
-## USAGE: make pipeline_video location=all model=vgg16_pretrained.model label=le.pickle
+## USAGE: make pipeline_video location=all model=vgg16_pretrained.model detector=face_RFB
 pipeline_video:
-	$(PYTHON_INTERPRETER) src/data/make_dataset_video.py -i portrait_videos -d face_detector -s 6 -r 1
-	$(PYTHON_INTERPRETER) src/models/train.py train --dataset=$(location) --model=$(model) --le=$(label)
-	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=$(model) --le=$(label) --detector=face_detector
+	$(PYTHON_INTERPRETER) src/data/make_dataset_video.py -i portrait_videos -d $(detector) -s 6 -r 1
+	$(PYTHON_INTERPRETER) src/models/train.py train --dataset=$(location) --model=$(model) --le=le.pickle
+	$(PYTHON_INTERPRETER) src/models/predict.py video_demo --model=$(model) --le=le.pickle --detector=$(detector)
 
 #################################################################################
 # Self Documenting Commands                                                     #

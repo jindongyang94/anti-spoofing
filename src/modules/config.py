@@ -1,5 +1,6 @@
 import os
 import logging
+from glob import glob
 
 # Logger --------------------------------------------------------------------------------------
 try:
@@ -44,22 +45,33 @@ PROFILEIMG_FOLDER = 'images/profile_pics'
 # LOCAL WORKING DIRECTORIES --------------------------------------------------------------------------------
 WORKING_DIR = '/Users/jindongyang/Documents/repos/hubble/hubble_projects/hubble_spoofing_detection'
 
+## DATA DIRECTORIES
 EXTERNAL_DATA_DIR = os.path.join(WORKING_DIR, 'data/external')
 
 INTERIM_DATA_DIR = os.path.join(WORKING_DIR, 'data/interim')
 
 PROCESSED_DATA_DIR = os.path.join(WORKING_DIR, 'data/processed')
 
+## MODELS DIRECTORIES
 MODELS_DIR = os.path.join(WORKING_DIR, 'models')
 
 NN_MODELS_DIR = os.path.join(MODELS_DIR, 'nn_models')
 
 NN_WEIGHTS_DIR = os.path.join(MODELS_DIR, 'nn_pretrained_weights')
 
-DETECTORS_DIR = os.path.join(MODELS_DIR, 'detectors')
-
 LABELS_DIR = os.path.join(MODELS_DIR, 'labels')
 
+DETECTORS_DIR = os.path.join(MODELS_DIR, 'detectors')
+
+def find_model(folder, extension):
+    """
+    This is assuming there is only one of each extension each folder, which should be kept this case all the time.
+    """
+    extension = '*.' + extension
+    dir = glob(os.path.join(folder, extension))
+    return dir[0]
+
+## REPORTS DIRECTORIES
 REPORTS_DIR = os.path.join(WORKING_DIR, 'reports')
 
 FIGURES_DIR = os.path.join(REPORTS_DIR, 'figures')
