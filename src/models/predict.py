@@ -24,11 +24,12 @@ from tqdm import tqdm
 from modules.aws_helper import S3Helper
 from modules.config import (DATALAKE_NAME, DETECTORS_DIR, EXTERNAL_DATA_DIR,
                             INTERIM_DATA_DIR, LABELS_DIR, NN_MODELS_DIR,
-                            PROFILEIMG_FOLDER, WORKING_DIR, logger, find_model)
-from modules.nn_predict_helper import label_with_face_detector_original, label_with_face_detector_ultra
+                            PROFILEIMG_FOLDER, WORKING_DIR, find_model, logger)
+from modules.nn_predict_helper import (label_with_face_detector_original,
+                                       label_with_face_detector_ultra)
 
 
-def video_demo(model, le, detector, confidence=0.5):
+def video_demo(model, le, detector, confidence=0.9):
     """
     provide video live demo to check if the model works.
     """
@@ -64,7 +65,10 @@ def video_demo(model, le, detector, confidence=0.5):
         # grab the frame from the threaded video stream and resize it
         # to have a maximum width of 600 pixels
         frame = vs.read()
-        frame, _, _ = label_with_face_detector_ultra(frame, net, model, le, args['confidence'])
+        if args['detector'] == 'face_RFB':
+            frame, _, _ = label_with_face_detector_ultra(frame, net, model, le, args['confidence'])
+        else:
+            frame, _, _ = label_with_face_detector_original(frame, net, model, le, args['confidence'])
         # show the output frame and wait for a key press
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
@@ -118,8 +122,7 @@ def classify_images(location, detector, model, le, confidence=0.9):
         open(os.path.join(LABELS_DIR, args["le"]), "rb").read())
 
     # Grab all images from given folder
-    unsorted_folder = os.path.join(
-        EXTERNAL_DATA_DIR, location)
+    unsorted_folder = os.path.join(EXTERNAL_DATA_DIR, location)
     images = glob(os.path.join(unsorted_folder, '*.png'))
     jpg_images = glob(os.path.join(unsorted_folder, '*.jpg'))
     images.extend(jpg_images)
@@ -132,15 +135,17 @@ def classify_images(location, detector, model, le, confidence=0.9):
     bar = tqdm(images, dynamic_ncols=True, desc='Bar desc', leave=True)
     for image in bar:
         frame = cv2.imread(image)
-        frame, contains_fake, detected_faces = label_with_face_detector_original(
-            frame, net, model, le, confidence)
+        if args['detector'] == 'face_RFB':
+            frame, finally_fake, detected_faces = label_with_face_detector_ultra(frame, net, model, le, args['confidence'])
+        else:
+            frame, finally_fake, detected_faces = label_with_face_detector_original(frame, net, model, le, args['confidence'])
 
         # Relocate the image based on whether it is fake, real or noface
         image_name = os.path.basename(image)
         if detected_faces == 0:
             image_location = os.path.join(noface_location, image_name)
             noface_counter += 1
-        elif contains_fake:
+        elif finally_fake:
             image_location = os.path.join(fake_location, image_name)
             fake_counter += 1
         else:
@@ -151,7 +156,7 @@ def classify_images(location, detector, model, le, confidence=0.9):
         cv2.imwrite(image_location, frame)
 
         # Delete image from unsorted location
-        # os.remove(image)
+        os.remove(image)
 
         image_folder_location = os.path.split(image_location)[0]
         image_category = os.path.split(image_folder_location)[1]
