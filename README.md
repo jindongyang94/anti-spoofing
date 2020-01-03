@@ -94,6 +94,9 @@ Credits goes to <https://www.pyimagesearch.com/author/adrian/>
 
 This library is simply to show how you can train your own simple face detection wtih anti-spoofing function:  
 
+Examples of the function commands are pasted at the top of all scripts.  
+Use the makeFile functions instead of interacting with the scripts yourself.  
+
 ## Processing Dataset
 
 ### Process a video into frames
@@ -107,9 +110,6 @@ This library is simply to show how you can train your own simple face detection 
 1. Add the real photos in a new folder under <data/processed/new_folder/real>
 2. Add the fake photos in a new folder under <data/processed/new_folder/fake>
 
-Examples of the function commands are pasted at the top of all scripts.  
-Use the makeFile functions instead of interacting with the scripts yourself.
-
 ### Preprocess images based on unclassified images
 
 1. Add all the unclassified photos in a new folder under <data/external/new_folder>  
@@ -120,7 +120,7 @@ Use the makeFile functions instead of interacting with the scripts yourself.
 
 There is not much change needed here except the understanding of some parameters given.
 
-1. Train the model with ALL the available data using `make train location=all model=vgg16_pretrained.model label=le.pickle`.  
+1. Train the model with **ALL** the available data using `make train location=all model=vgg16_pretrained.model label=le.pickle`.  
 You can use only one location if you specify the folder at the location folder. The location is determined to always be situated in the <data/processed> location as we should only train with datasets already processed.  
 Label is pickled during training as well, as it takes the direct sub-folder names (real, fake) as the labels for each photos.  
 
@@ -129,7 +129,7 @@ Label is pickled during training as well, as it takes the direct sub-folder name
 There are two ways you can test your model.
 
 1. Launch a live cam and see if the screen is capturing you or your images as real or spoofed: `make predict_video model=vgg16_pretrained.model detector=face_RFB`. Similarly, you can change the used model and face_detector.
-2. Classify photos using a pretrained model. This is similar to step 3 in "Preprocessing images based on unclassified images": `make classify location=attendance_photos`
+2. Classify photos using a pretrained model. This is similar to step 3 in *Preprocessing images based on unclassified images*: `make classify location=attendance_photos`
 
 ------------
 
