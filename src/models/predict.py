@@ -92,7 +92,8 @@ def classify_images(location, detector, model, le, confidence=0.9):
     args = {
         'detector': detector,
         'model': model,
-        'le': le
+        'le': le,
+        'confidence': confidence
     }
 
     # Create Folders
@@ -136,9 +137,9 @@ def classify_images(location, detector, model, le, confidence=0.9):
     for image in bar:
         frame = cv2.imread(image)
         if args['detector'] == 'face_RFB':
-            frame, finally_fake, detected_faces = label_with_face_detector_ultra(frame, net, model, le, args['confidence'])
+            frame, finally_fake, detected_faces = label_with_face_detector_ultra(frame, net, model, le, args['confidence'], use_video=False)
         else:
-            frame, finally_fake, detected_faces = label_with_face_detector_original(frame, net, model, le, args['confidence'])
+            frame, finally_fake, detected_faces = label_with_face_detector_original(frame, net, model, le, args['confidence'], use_video=False)
 
         # Relocate the image based on whether it is fake, real or noface
         image_name = os.path.basename(image)
