@@ -114,7 +114,7 @@ Use the makeFile functions instead of interacting with the scripts yourself.
 
 1. Add all the unclassified photos in a new folder under <data/external/new_folder>  
 2. Run `make data_label location=new_folder`. What this will do is that it will create the necessary folders needed in the <data/processed> folder, and move the images to the designated label.  
-3. Alternatively, you can classify the images using a pretrained model: `make classify location=attendance_photos`. You can change the model, face_detector and labels in the Makefile.  
+3. Alternatively, you can classify the images using a pretrained model: `make classify location=attendance_photos`. **The classified photos, howeever, will be moved to <data/interim> folder instead, so you can do more manual preprocessing before confirm moving them to the final <data/preprocessed location>.** Do remember to create the correct folders with the correct labels when moving. You can change the model, face_detector and labels in the Makefile.  
 
 ## Training
 
