@@ -90,18 +90,53 @@ detecting spoofs from real attendance photos
 
 ------------
 
-Credits goes to https://www.pyimagesearch.com/author/adrian/
+Credits goes to <https://www.pyimagesearch.com/author/adrian/>
 
 This library is simply to show how you can train your own simple face detection wtih anti-spoofing function:  
 
-1. Make a video of yourself for about 20 -30 seconds and save it under the data/external/portrait_videos/real folder .  
-2. Take a video of the video of yourself and save it under the data/external/portrait_videos/fake folder .  
-3. Split the videos to frames or photos to create your dataset using function: ''' make data_video portrait_videos face_detector 8 0 ''' . The frames will be saved under src/data/processed folder.
-4. Train the model using src/models/train.py .  
-5. Test the model using src/models/predict.py .  
+## Processing Dataset
+
+### Process a video into frames
+
+1. Make a video of yourself for about 20 -30 seconds and save it under the <data/external/portrait_videos/real> folder.  
+2. Take a video of the video of yourself and save it under the <data/external/portrait_videos/fake> folder.  
+3. Split the videos to frames or photos to create your dataset using function:  `make data_video location=portrait_videos detector=face_detector skip=8 reset=0`. The frames will be saved under <data/processed/portrait_videos> folder. The reset variable is useful in determing if you want to delete all existing frames from the folder or not.  
+
+### Process images based on static images
+
+1. Add the real photos in a new folder under <data/processed/new_folder/real>
+2. Add the fake photos in a new folder under <data/processed/new_folder/fake>
 
 Examples of the function commands are pasted at the top of all scripts.  
 Use the makeFile functions instead of interacting with the scripts yourself.
+
+### Preprocess images based on unclassified images
+
+1. Add all the unclassified photos in a new folder under <data/external/new_folder>  
+2. Run `make data_label location=new_folder`. What this will do is that it will create the necessary folders needed in the <data/processed> folder, and move the images to the designated label.  
+3. Alternatively, you can classify the images using a pretrained model: `make classify location=attendance_photos`. You can change the model, face_detector and labels in the Makefile.  
+
+## Training
+
+There is not much change needed here except the understanding of some parameters given.
+
+1. Train the model with ALL the available data using `make train location=all model=vgg16_pretrained.model label=le.pickle`.  
+You can use only one location if you specify the folder at the location folder. The location is determined to always be situated in the <data/processed> location as we should only train with datasets already processed.  
+Label is pickled during training as well, as it takes the direct sub-folder names (real, fake) as the labels for each photos.  
+
+## Testing
+
+There are two ways you can test your model.
+
+1. Launch a live cam and see if the screen is capturing you or your images as real or spoofed: `make predict_video model=vgg16_pretrained.model detector=face_RFB`. Similarly, you can change the used model and face_detector.
+2. Classify photos using a pretrained model. This is similar to step 3 in "Preprocessing images based on unclassified images": `make classify location=attendance_photos`
+
+------------
+
+## Future Work
+
+1. Allow more customization for testing - classify photos not just in bulk but solo as well. Allow classified photos to be saved elsewhere.  
+2. The local api implementation is done in this github link: <https://github.com/jindongyang94/anti-spoofing_api>
 
 ------------
 
